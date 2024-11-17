@@ -8,7 +8,7 @@ PURPOSE: just a proof of concept
 
 void sendSignalToBrain(String msg)
 {
-  Serial.print(msg);
+  Serial.println(msg);
 }
 
 void setup() {

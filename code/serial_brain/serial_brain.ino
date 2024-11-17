@@ -1,76 +1,60 @@
-/*
-AUTHOR: Jayden Chen https://github.com/Gob1inSharks
-PURPOSE: proof of concept
-*/
+#include <Wire.h>
 
-#define numSpine 4
-#define numChars 32
+#define MASTER_ID 8
+#define SLAVES_ID 8
 
-char spineStatus[numSpine];
-/*
-each spine has an id as a number char
-each spine has a status:
-  0 - 
-  1 - 
-  2 - 
-  3 - 
-*/
+void setup() {
+  Wire.begin();
+  Serial.begin(9600);  // start serial for output
+}
 
-String recvSpines() {
+String getRequestFromSlave(int id){
 
-  bool newData = false;
-  char receivedChars[numChars];
-  static bool recvInProgress = false;
-  static int ndx = 0;
+  String msg = "";
+  Wire.requestFrom(id, 8);
+
+  while (Wire.available() > 0) { // peripheral may send less than requested
+    char c = Wire.read();
+    msg += c;
+    Serial.print(c);
+  }
+  Serial.print("\n");
+
+  return msg;
+}
+
+String cleanSlaveRequest(String msg){
+
   char startMarker = '<';
   char endMarker = '>';
-  char rc;
- 
-  while (Serial.available() > 0 && newData == false) {
 
-    rc = Serial.read();
+  String cleanedMsg = "";
 
-    if (recvInProgress){
+  bool flag = false;
+  for(char& c : msg) {
 
-      if (rc != endMarker){
-        
-        receivedChars[ndx] = rc;
-        ndx++;
+    if(c == startMarker) flag = true;
+    if(c == endMarker) flag = false;
 
-        if (ndx >= numChars) ndx = numChars - 1; //limit the number of char
-                                                 //to save space
-
-      } else {
-
-        receivedChars[ndx] = '\0'; //terminate the string & reset
-        recvInProgress = false;
-        ndx = 0;
-        newData = true;
-      }
-    
-    }else if (rc == startMarker) {
-      recvInProgress = true;
+    if(flag){
+      cleanedMsg += c;
     }
   }
 
-  return String(receivedChars);
+  return cleanedMsg;
 }
 
-void sendToLaptop(String msg) {
-  Serial.print("<Received: ");
-  Serial.print(msg);
-  Serial.println(">");
-}
-
-void setup() {
-  Serial.begin(9600);
-  Serial.println("<Brain Ready>");
-}
-
-String msg;
-
+int count = 0;
 void loop() {
-  msg = String(recvSpines());
-  delay(30);
-  sendToLaptop(msg);
+
+  count++; Serial.print(count); Serial.print(": ");
+  String msg = getRequestFromSlave(SLAVES_ID);
+  String cleanedMsg = cleanSlaveRequest(msg);
+  Serial.println(msg);
+  Serial.println(cleanedMsg);
+  Serial.println("----------------------------------------------------");
+
+  if(count == 10000) count = 0;
+
+  delay(100);
 }
