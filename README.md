@@ -1,4 +1,4 @@
-![inProgress](https://github.com/free-icons/free-icons/blob/master/svgs/light-bars-progress.svg)
+![inProgress](https://github.com/KaterinaLupacheva/react-progress-bar/blob/d8ac754eba698707ce427cddd325ddd79eb83fc2/images/example3.png)
 # Acessible Landmarks
 
 This is the repoistory for the **in progress** project Acessible Landmarks (temporay name): 3D puzzles of landmarks made for the visually disabled. Our guiding questions are:
@@ -9,4 +9,4 @@ This is the repoistory for the **in progress** project Acessible Landmarks (temp
 
 3. How can we integrate Internet of Things and other technologies into this project?
 
-![project image]
+![project default image]()
