@@ -3,7 +3,8 @@
 #define SLAVE_ID 9
 
 #define COLOR_GROUPS_NUM 2
-#define COLOR_GROUPS_ID {24,25}
+#define COLOR_GROUPS_ID (int[]){24,25}
+#define COLOR_GROUPS (int[][3]){{24,35,26},{25,36,27}}
 
 #define RED_LOWER_BOUND 0
 #define RED_UPPER_BOUND 1000
@@ -16,19 +17,19 @@
 
 #define COLOR_SENSOR_DELAY_TIME 1
 
-#define PIECES_NUM 2
+#define PIECES_NUM 1
 
-int color_group_pins[COLOR_GROUPS_NUM][5];
-int colors[COLOR_GROUPS][3];
-bool piecesInPlace[PIECES_NUM];
+int color_groups_pins[COLOR_GROUPS_NUM][5];
+int colors[COLOR_GROUPS_NUM][3];
+bool pieces[PIECES_NUM*2] = {false,false};
+int piecesInPlace = 0;
 
 void assignColorPins() {
 
-  for(int i = 0; i < COLOR_GROUPS_ID; i++){
+  for(int i = 0; i < COLOR_GROUPS_NUM; i++){
     
     int current_id = COLOR_GROUPS_ID[i];
 
-    // seperate each pin
     color_groups_pins[i][0] = current_id + 0;
     pinMode(current_id + 0, OUTPUT);
 
@@ -53,7 +54,6 @@ void setFrequencyScalingTo20Percent(int id){
   digitalWrite(id + 0,HIGH);
   digitalWrite(id + 2,LOW);
 
-  Serial.start(9600);
 }
 
 void setup() {
@@ -61,6 +61,8 @@ void setup() {
   Wire.begin(SLAVE_ID);
   Wire.onRequest(requestEvent);
 
+  Serial.begin(9600);
+  
   assignColorPins();
 }
 
@@ -71,7 +73,7 @@ int getRedFrequencies(int id){
 
   delay(COLOR_SENSOR_DELAY_TIME);
 
-  redFrequency = pulseIn(id + 8, LOW);
+  int redFrequency = pulseIn(id + 8, LOW);
 
   return redFrequency;
 }
@@ -83,9 +85,9 @@ int getRedFrequenciesWithMapping(int id){
 
   delay(COLOR_SENSOR_DELAY_TIME);
 
-  redFrequency = pulseIn(id + 8, LOW);
+  int redFrequency = pulseIn(id + 8, LOW);
 
-  redColorValue = map(redFrequency, RED_LOWER_BOUND, RED_UPPER_BOUND, 255, 0);
+  int redColorValue = map(redFrequency, RED_LOWER_BOUND, RED_UPPER_BOUND, 255, 0);
 
   return redColorValue;
 }
@@ -97,9 +99,9 @@ int getBlueFrequencies(int id){
 
   delay(COLOR_SENSOR_DELAY_TIME);
 
-  blueFrequency = pulseIn(id + 8, LOW);
+  int blueFrequency = pulseIn(id + 8, LOW);
 
-  return blueColorValue;
+  return blueFrequency;
 }
 
 int getBlueFrequenciesWithMapping(int id){
@@ -109,9 +111,9 @@ int getBlueFrequenciesWithMapping(int id){
 
   delay(COLOR_SENSOR_DELAY_TIME);
 
-  blueFrequency = pulseIn(id + 8, LOW);
+  int blueFrequency = pulseIn(id + 8, LOW);
 
-  blueColorValue = map(blueFrequency, BLUE_LOWER_BOUND, BLUE_UPPER_BOUND, 255, 0);
+  int blueColorValue = map(blueFrequency, BLUE_LOWER_BOUND, BLUE_UPPER_BOUND, 255, 0);
 
   return blueColorValue;
 }
@@ -123,7 +125,7 @@ int getGreenFrequencies(int id){
 
   delay(COLOR_SENSOR_DELAY_TIME);
 
-  greenFrequency = pulseIn(id + 8, LOW);
+  int greenFrequency = pulseIn(id + 8, LOW);
 
   return greenFrequency;
 }
@@ -135,9 +137,9 @@ int getGreenFrequenciesWithMapping(int id){
 
   delay(10);
 
-  greenFrequency = pulseIn(id + 8, LOW);
+  int greenFrequency = pulseIn(id + 8, LOW);
 
-  greenColorValue = map(greenFrequency, GREEN_LOWER_BOUND, GREEN_UPPER_BOUND, 255, 0);
+  int greenColorValue = map(greenFrequency, GREEN_LOWER_BOUND, GREEN_UPPER_BOUND, 255, 0);
 
   return greenColorValue;
 }
@@ -148,19 +150,19 @@ void getAllColorFrequencies(){
     colors[i][0] = getRedFrequencies(COLOR_GROUPS_ID[i]);
   }
 
-  delay(30);
+  delay(20);
 
   for(int i = 0; i < COLOR_GROUPS_NUM; i++){
     colors[i][1] = getGreenFrequencies(COLOR_GROUPS_ID[i]);
   }
 
-  delay(30);
+  delay(20);
 
   for(int i = 0; i < COLOR_GROUPS_NUM; i++){
     colors[i][2] = getBlueFrequencies(COLOR_GROUPS_ID[i]);
   }
 
-  delay(30);
+  delay(20);
 
 }
 
@@ -186,19 +188,46 @@ void getAllColorFrequenciesWithMapping(){
 
 }
 
+void showColorsInSerial(){
+  Serial.println("----------------------------------------------");
+  for(int i = 0; i < COLOR_GROUPS_NUM; i++){
+    for(int j = 0; j < 3; j++){
+      Serial.print(colors[i][j]);
+    } Serial.println();
+  }
+  Serial.println("----------------------------------------------");
 
+}
+
+bool colorCorrect(int color_id){
+
+  int THRESHOLD = 10;
+
+  int foo = 0;
+
+  for(int i = 0; i < 3; i++){
+    if(colors[color_id][i] > COLOR_GROUPS[color_id][i] - THRESHOLD && colors[color_id][i] < COLOR_GROUPS[color_id][i] + THRESHOLD)
+      foo++;
+  }
+
+  if(foo < 3) return false;
+
+  return true;
+  
+}
 
 void requestEvent() {
-  if (inPlace){
-    Wire.write("<1>");
-  }else{
-    Wire.write("<0>");
-  }
+
+  Wire.write("<");
+  Wire.write(piecesInPlace);
+  Wire.write(">");
+
 }
 
 void loop() {
 
   getAllColorFrequencies();
   //getAllColorFrequenciesWithMapping();
+  showColorsInSerial();
   
 }
