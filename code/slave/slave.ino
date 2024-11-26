@@ -2,26 +2,27 @@
 
 #define SLAVE_ID 9
 
-#define COLOR_GROUPS_NUM 2
-#define COLOR_GROUPS_ID (int[]){24,25}
-#define COLOR_GROUPS (int[][3]){{24,35,26},{25,36,27}}
+#define COLOR_GROUPS_NUM 4
+#define COLOR_GROUPS_ID (int[]){22,32,23,33}
+#define COLORS (int[]){1,3,1,3}
 
 #define RED_LOWER_BOUND 0
-#define RED_UPPER_BOUND 1000
+#define RED_UPPER_BOUND 255
 
 #define BLUE_LOWER_BOUND 0
-#define BLUE_UPPER_BOUND 1000
+#define BLUE_UPPER_BOUND 255
 
 #define GREEN_LOWER_BOUND 0
-#define GREEN_UPPER_BOUND 1000
+#define GREEN_UPPER_BOUND 255
 
-#define COLOR_SENSOR_DELAY_TIME 1
+#define COLOR_SENSOR_DELAY_TIME 100
 
-#define PIECES_NUM 1
+#define PIECES_NUM 2
 
 int color_groups_pins[COLOR_GROUPS_NUM][5];
 int colors[COLOR_GROUPS_NUM][3];
-bool pieces[PIECES_NUM*2] = {false,false};
+bool pieceFlag[PIECES_NUM*2];
+
 int piecesInPlace = 0;
 
 void assignColorPins() {
@@ -43,7 +44,7 @@ void assignColorPins() {
     pinMode(current_id + 6, OUTPUT);
 
     color_groups_pins[i][4] = current_id + 8;
-    pinMode(current_id + 8, OUTPUT);
+    pinMode(current_id + 8, INPUT);
 
     setFrequencyScalingTo20Percent(current_id);
   }
@@ -135,7 +136,7 @@ int getGreenFrequenciesWithMapping(int id){
   digitalWrite(id + 4, LOW);
   digitalWrite(id + 6, HIGH);
 
-  delay(10);
+  delay(COLOR_SENSOR_DELAY_TIME);
 
   int greenFrequency = pulseIn(id + 8, LOW);
 
@@ -150,19 +151,13 @@ void getAllColorFrequencies(){
     colors[i][0] = getRedFrequencies(COLOR_GROUPS_ID[i]);
   }
 
-  delay(20);
-
   for(int i = 0; i < COLOR_GROUPS_NUM; i++){
     colors[i][1] = getGreenFrequencies(COLOR_GROUPS_ID[i]);
   }
 
-  delay(20);
-
   for(int i = 0; i < COLOR_GROUPS_NUM; i++){
     colors[i][2] = getBlueFrequencies(COLOR_GROUPS_ID[i]);
   }
-
-  delay(20);
 
 }
 
@@ -171,20 +166,14 @@ void getAllColorFrequenciesWithMapping(){
   for(int i = 0; i < COLOR_GROUPS_NUM; i++){
     colors[i][0] = getRedFrequenciesWithMapping(COLOR_GROUPS_ID[i]);
   }
-  
-  delay(30);
 
   for(int i = 0; i < COLOR_GROUPS_NUM; i++){
     colors[i][1] = getGreenFrequenciesWithMapping(COLOR_GROUPS_ID[i]);
   }
-  
-  delay(30);
 
   for(int i = 0; i < COLOR_GROUPS_NUM; i++){
     colors[i][2] = getBlueFrequenciesWithMapping(COLOR_GROUPS_ID[i]);
   }
-  
-  delay(30);
 
 }
 
@@ -193,35 +182,82 @@ void showColorsInSerial(){
   for(int i = 0; i < COLOR_GROUPS_NUM; i++){
     for(int j = 0; j < 3; j++){
       Serial.print(colors[i][j]);
+      Serial.print(",");
     } Serial.println();
   }
   Serial.println("----------------------------------------------");
 
+  delay(100);
 }
 
-bool colorCorrect(int color_id){
+int colorCorrect(int color_id){
 
-  int THRESHOLD = 10;
+  int THRESHOLD = 50;
 
-  int foo = 0;
-
-  for(int i = 0; i < 3; i++){
-    if(colors[color_id][i] > COLOR_GROUPS[color_id][i] - THRESHOLD && colors[color_id][i] < COLOR_GROUPS[color_id][i] + THRESHOLD)
-      foo++;
+  int r = colors[color_id][0], g = colors[color_id][1], b = colors[color_id][2];
+  
+  if((r > g - THRESHOLD) && (r > b - THRESHOLD)){
+    return 1;
+  }else if((g > r - THRESHOLD) && (g > b - THRESHOLD)){
+    return 2;
+  }else if((b > r - THRESHOLD) && (b > g - THRESHOLD)){
+    return 3;
   }
 
-  if(foo < 3) return false;
+  return 0;
+}
 
-  return true;
-  
+void updateFlags(){
+
+  for(int i = 0; i < COLOR_GROUPS_NUM; i++){
+    int color = colorCorrect(i);
+    
+    if(color = COLORS[i]){
+      pieceFlag[i] = true;
+    }else{
+      pieceFlag[i] = false;
+    }
+  }
+}
+
+void updatePiecesInPlace(){
+
+  updateFlags();
+  piecesInPlace = 0;
+
+  for(int i = 0; i < COLOR_GROUPS_NUM; i+=2){
+    if(pieceFlag[i] && pieceFlag[i]){
+      piecesInPlace ++;
+    }
+  }
 }
 
 void requestEvent() {
 
   Wire.write("<");
-  Wire.write(piecesInPlace);
+  switch (piecesInPlace) {
+    case 1:
+      Wire.write("1");
+      break;
+    case 2:
+      Wire.write("2");
+      break;
+    case 3:
+      Wire.write("3");
+      break;
+    case 4:
+      Wire.write("4");
+      break;
+    default:
+      Wire.write("0");
+      break;
+    }
   Wire.write(">");
 
+}
+
+void test() {
+  
 }
 
 void loop() {
