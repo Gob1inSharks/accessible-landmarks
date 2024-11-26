@@ -3,7 +3,7 @@
 #define SLAVES_NUM 2
 #define SLAVES_IDS (int[]){9,10}
 
-#define DELAY_TIME 100
+#define DELAY_TIME 1000
 
 void setup() {
   
@@ -27,6 +27,17 @@ String recieveSignalFromSlave(int id){
   return msg;
 }
 
+int cleanMessageFromSlave(String msg){
+  
+  //iterate through message and remove all characters except numbers
+  String cleanedMsg = "";
+  for(char& c : msg) {
+    if(isdigit(c)) cleanedMsg += c;
+  }
+
+  return cleanedMsg.toInt();
+}
+
 void showSlaveSignalInSerial(int id){
 
   int BYTES_REQUESTED = 8;
@@ -37,15 +48,39 @@ void showSlaveSignalInSerial(int id){
     char c = Wire.read();
     Serial.print(c);
   }
-  Serial.print("\n");
 
+}
+
+void test(){
+
+  Serial.println("----------------------------------------------");
+
+  int piecesInPlace = 0;
+
+  for(int i = 0; i < SLAVES_NUM; i++){
+
+    String msg = recieveSignalFromSlave(i);
+
+    int foo = cleanMessageFromSlave(msg);
+    piecesInPlace += foo;
+
+    Serial.print("Slave "); Serial.print(SLAVES_IDS[i]); Serial.print(": ");
+    Serial.print(msg);
+    Serial.print("Cleaned:"); Serial.print(foo);Serial.print("\n");
+
+    delay(DELAY_TIME);
+  }
+  //Serial.print("\n");
+
+  Serial.println(piecesInPlace);
+
+  delay(50);
+
+  Serial.println("----------------------------------------------");
 }
 
 void loop() {
   
-  for(int i = 0; i < SLAVES_NUM; i++){
-    Serial.print("Slave "); Serial.print(SLAVES_IDS[i]); Serial.print(": ");
-    showSlaveSignalInSerial(SLAVES_IDS[i]);
-    delay(DELAY_TIME);
-  }
+  test();
+
 }
