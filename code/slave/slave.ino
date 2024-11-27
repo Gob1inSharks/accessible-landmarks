@@ -1,10 +1,11 @@
 #include <Wire.h>
 
 #define SLAVE_ID 9
+//#define SLAVE_ID 10
 
 #define COLOR_GROUPS_NUM 4
 #define COLOR_GROUPS_ID (int[]){22,32,23,33}
-#define COLORS (int[]){1,3,1,3}
+#define COLORS (int[]){1,1,1,1}
 
 #define RED_LOWER_BOUND 0
 #define RED_UPPER_BOUND 255
@@ -62,7 +63,7 @@ void setup() {
   Wire.begin(SLAVE_ID);
   Wire.onRequest(requestEvent);
 
-  Serial.begin(9600);
+  Serial.begin(4800);
   
   assignColorPins();
 }
@@ -121,7 +122,7 @@ int getBlueFrequenciesWithMapping(int id){
 
 int getGreenFrequencies(int id){
 
-  digitalWrite(id + 4, LOW);
+  digitalWrite(id + 4, HIGH);
   digitalWrite(id + 6, HIGH);
 
   delay(COLOR_SENSOR_DELAY_TIME);
@@ -133,7 +134,7 @@ int getGreenFrequencies(int id){
 
 int getGreenFrequenciesWithMapping(int id){
 
-  digitalWrite(id + 4, LOW);
+  digitalWrite(id + 4, HIGH);
   digitalWrite(id + 6, HIGH);
 
   delay(COLOR_SENSOR_DELAY_TIME);
@@ -185,25 +186,36 @@ void showColorsInSerial(){
       Serial.print(",");
     } Serial.println();
   }
-  Serial.println("----------------------------------------------");
+  //Serial.println("----------------------------------------------");
 
   delay(100);
 }
 
 int colorCorrect(int color_id){
 
-  int THRESHOLD = 50;
+  float THRESHOLD = .35;
 
   int r = colors[color_id][0], g = colors[color_id][1], b = colors[color_id][2];
   
-  if((r > g - THRESHOLD) && (r > b - THRESHOLD)){
-    return 1;
-  }else if((g > r - THRESHOLD) && (g > b - THRESHOLD)){
-    return 2;
-  }else if((b > r - THRESHOLD) && (b > g - THRESHOLD)){
-    return 3;
+  int out;
+  int foo;
+  float rp = (float)r/(((float)g+(float)b)/2.0);
+  float gp = (float)g/(((float)b+(float)r)/2.0);
+  float bp = (float)b/(((float)r+(float)g)/2.0);
+  if(rp < gp && rp < bp){
+    foo = rp;
+    out = 1;
+  }else if (gp < rp && gp < bp){
+    foo = gp;
+    out = 2;
+  }else{
+    foo = bp;
+    out = 3;
   }
 
+  if(foo < THRESHOLD){
+    return out;
+  }
   return 0;
 }
 
@@ -212,7 +224,7 @@ void updateFlags(){
   for(int i = 0; i < COLOR_GROUPS_NUM; i++){
     int color = colorCorrect(i);
     
-    if(color = COLORS[i]){
+    if(color == COLORS[i]){
       pieceFlag[i] = true;
     }else{
       pieceFlag[i] = false;
@@ -226,7 +238,7 @@ void updatePiecesInPlace(){
   piecesInPlace = 0;
 
   for(int i = 0; i < COLOR_GROUPS_NUM; i+=2){
-    if(pieceFlag[i] && pieceFlag[i]){
+    if(pieceFlag[i] && pieceFlag[i+1]){
       piecesInPlace ++;
     }
   }
@@ -257,13 +269,35 @@ void requestEvent() {
 }
 
 void test() {
+
+  getAllColorFrequencies();
+
+  showColorsInSerial();
+
+  updatePiecesInPlace();
+
+  Serial.println(piecesInPlace);
+  Serial.println(colorCorrect(0));
+
+  //delay(100);
+
+}
+
+int count = 0;
+void test2() {
+
+  piecesInPlace = 1;
+
+  count++;
+  if(count > 4){count = 0;}
   
 }
 
 void loop() {
 
-  getAllColorFrequencies();
+  //getAllColorFrequencies();
   //getAllColorFrequenciesWithMapping();
-  showColorsInSerial();
-  
+  //showColorsInSerial();
+  test();
+  delay(200);  
 }
