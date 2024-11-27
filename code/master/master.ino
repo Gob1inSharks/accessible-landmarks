@@ -3,7 +3,7 @@
 #define SLAVES_NUM 2
 #define SLAVES_IDS (int[]){9,10}
 
-#define DELAY_TIME 1000
+#define DELAY_TIME 500
 
 void setup() {
   
@@ -16,12 +16,12 @@ String recieveSignalFromSlave(int id){
 
   int BYTES_REQUESTED = 8;
 
-  Wire.requestFrom(id, BYTES_REQUESTED);
+  String msg;
 
-  String msg = "";
+  Wire.requestFrom(id, 8);
   while (Wire.available() > 0) { // peripheral may send less than requested
     char c = Wire.read();
-    msg += c;
+    msg += String(c);
   }
   
   return msg;
@@ -48,6 +48,7 @@ void showSlaveSignalInSerial(int id){
     char c = Wire.read();
     Serial.print(c);
   }
+  Serial.print("\n");
 
 }
 
@@ -59,7 +60,7 @@ void test(){
 
   for(int i = 0; i < SLAVES_NUM; i++){
 
-    String msg = recieveSignalFromSlave(i);
+    String msg = recieveSignalFromSlave(SLAVES_IDS[i]);
 
     int foo = cleanMessageFromSlave(msg);
     piecesInPlace += foo;
@@ -68,19 +69,21 @@ void test(){
     Serial.print(msg);
     Serial.print("Cleaned:"); Serial.print(foo);Serial.print("\n");
 
-    delay(DELAY_TIME);
+    delay(100);
   }
+
+  delay(DELAY_TIME-100);
   //Serial.print("\n");
 
   Serial.println(piecesInPlace);
 
-  delay(50);
-
-  Serial.println("----------------------------------------------");
+  //Serial.println("----------------------------------------------");
 }
 
 void loop() {
   
   test();
+  //showSlaveSignalInSerial(9);
+  delay(50);
 
 }
