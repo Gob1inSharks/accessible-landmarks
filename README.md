@@ -65,14 +65,18 @@ We have all the [**stl** files needed here](https://github.com/Gob1inSharks/acce
 
 We built and ran this program on a Linux 6.8.4 machine with Python 3.12.3, not tested at all with other OSs.
 
-Install the needed libraries with pip:
+Get started with:
 
 ```
-python3 -m pip install python-requirements.txt
-```
+# clone the repo
+$ git clone https://github.com/Gob1inSharks/accessible-landmarks
 
-And run this line of code in the folder:
+# change the working directory to this
+$ cd accessible-landmarks
 
-```
-python3 start-experience.py
+# install the requirements
+$ python3 -m pip install -r python-requirements.txt
+
+# run the program
+$ python3 start-experience.py
 ```
