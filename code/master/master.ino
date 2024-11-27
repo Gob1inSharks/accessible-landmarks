@@ -69,6 +69,16 @@ void serialDisplayPieces(){
   Serial.print("Pieces in place: ");Serial.print(piecesInPlace);Serial.print("\n");
 }
 
+/**
+* The main loop, called repeatedly.
+* 
+* For each slave, receives the message, cleans it, and 
+* displays the received and cleaned messages.
+* 
+* After all slaves have been queried, sends the total number of pieces to MQTT.
+* 
+* @return void
+*/
 void main(){
 
   Serial.println("----------------------------------------------");
