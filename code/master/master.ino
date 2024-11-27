@@ -52,7 +52,24 @@ void showSlaveSignalInSerial(int id){
 
 }
 
-void test(){
+int mqttSend(int msg){
+  //todo: send pieces using mqtt
+  return 1;
+}
+
+void serialDisplayForTest(String msg, int id, int cleanedMsg){
+
+  Serial.print("Slave "); Serial.print(id); Serial.print(": ");
+  Serial.print(msg);
+  Serial.print("Cleaned:"); Serial.print(cleanedMsg);Serial.print("\n");
+
+}
+
+void serialDisplayPieces(){
+  Serial.print("Pieces in place: ");Serial.print(piecesInPlace);Serial.print("\n");
+}
+
+void main(){
 
   Serial.println("----------------------------------------------");
 
@@ -62,27 +79,24 @@ void test(){
 
     String msg = recieveSignalFromSlave(SLAVES_IDS[i]);
 
-    int foo = cleanMessageFromSlave(msg);
-    piecesInPlace += foo;
+    int cleanedMsg = cleanMessageFromSlave(msg);
+    piecesInPlace += cleanedMsg;
 
-    Serial.print("Slave "); Serial.print(SLAVES_IDS[i]); Serial.print(": ");
-    Serial.print(msg);
-    Serial.print("Cleaned:"); Serial.print(foo);Serial.print("\n");
+    serialDisplayForTest(msg, SLAVES_IDS[i], cleanedMsg);
 
     delay(100);
   }
 
+  int mqttResults = mqttSend(piecesInPlace);
+
+  serialDisplayPieces();
+
   delay(DELAY_TIME-100);
-  //Serial.print("\n");
-
-  Serial.println(piecesInPlace);
-
-  //Serial.println("----------------------------------------------");
 }
 
 void loop() {
   
-  test();
+  main();
   //showSlaveSignalInSerial(9);
   delay(50);
 
