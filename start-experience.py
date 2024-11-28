@@ -250,7 +250,8 @@ if __name__ == "__main__":
 
         def on_message(client, userdata, msg):
 
-            print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
+            #for debugging
+            #print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
 
             actions[clean_message(msg.payload.decode())]()
 
