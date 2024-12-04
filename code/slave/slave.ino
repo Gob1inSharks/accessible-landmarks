@@ -120,6 +120,13 @@ int getBlueFrequenciesWithMapping(int id){
   return blueColorValue;
 }
 
+/**
+ * Gets the green color frequency from the color sensor.
+ *
+ * @param id The ID of the color sensor.
+ *
+ * @return The green color frequency.
+ */
 int getGreenFrequencies(int id){
 
   digitalWrite(id + 4, HIGH);
@@ -132,6 +139,14 @@ int getGreenFrequencies(int id){
   return greenFrequency;
 }
 
+/**
+ * Gets the green color frequency from the color sensor, and then maps it to
+ * the range 0-255.
+ *
+ * @param id The ID of the color sensor.
+ *
+ * @return The green color value in the range 0-255.
+ */
 int getGreenFrequenciesWithMapping(int id){
 
   digitalWrite(id + 4, HIGH);
@@ -268,18 +283,33 @@ void requestEvent() {
 
 }
 
-void test() {
+int piecesInPlace = 0;
+
+/**
+ * This function is called when the master requests data from the slave.
+ * It sends back the number of pieces in place at the slave.
+ */
+void requestEventFromMaster() {
+
+  Wire.write("<");
+  Wire.write(pieceInPlace);
+  Wire.write(">");
+
+}
+
+/**
+ * Main function for the slave.
+ * It calls the functions to get the color frequencies,
+ * show the colors in the serial monitor,
+ * and update the number of pieces in place.
+ */
+void main() {
 
   getAllColorFrequencies();
 
   showColorsInSerial();
 
   updatePiecesInPlace();
-
-  Serial.println(piecesInPlace);
-  Serial.println(colorCorrect(0));
-
-  //delay(100);
 
 }
 
@@ -298,6 +328,6 @@ void loop() {
   //getAllColorFrequencies();
   //getAllColorFrequenciesWithMapping();
   //showColorsInSerial();
-  test();
+  main();
   delay(200);  
 }
